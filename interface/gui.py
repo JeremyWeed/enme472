@@ -2,6 +2,8 @@
 
 import PySimpleGUI as sg
 from conversions import Conversions as convs
+from comm import Comm
+
 
 # helpful color sites:
 # https://sendwithses.gitbook.io/helpdocs/random-stuff/easy-to-remember-color-guide-for-non-designers
@@ -64,13 +66,18 @@ class GUI():
                                              button_color=(self.TEXT_COLOR,
                                                            self.RED),
                                              font=self.FONT)]])
+        self.debug_scale = sg.Text('VALUE', font=self.FONT)
+        self.debug = sg.Frame('DEBUG', [[sg.Text('Scale:', font=self.FONT),
+                                         self.debug_scale]])
         self.left_side = sg.Column([[self.product_selector],
                                     [self.dispense_by],
-                                    [self.actuate]])
+                                    [self.actuate],
+                                    [self.debug]])
         self.layout = [[self.left_side,
                        self.right_side]]
         # sg.Frame('real-time controls',
         # [[sg.RealtimeButton('Dispense')]])
+        self.arduino = Comm('/dev/ttyACM1')
 
     def update_amount(self, value):
         self.amount.Update('{:,.2f}'.format(value))
@@ -96,6 +103,8 @@ class GUI():
                 self.amount.Update('{:,.2f}'.format(self.amount_val))
                 # self.dispensed.Update('{:,.2f}'.format(self.dispensed_val))
                 print(self.amount_val)
+            self.debug_scale.Update('{:d}'
+                                    .format(self.arduino.get_scale_raw()))
 
         window.Close()
 
