@@ -4,9 +4,11 @@
  */
 
 #include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
 
 #define PIN_SCALE A0
-#define PIN_MOTOR 0
+#define PIN_MOTOR 1
 #define MAX_SPEED 128
 
 #define CMD_READ_SCALE 0
@@ -21,10 +23,23 @@ struct __attribute__ ((packed)) Msg {
 } msg;
 Msg response;
 
+Adafruit_MotorShield afms = Adafruit_MotorShield();
+Adafruit_DCMotor *screw;
+
+void toggleLED() {
+  static uint8_t led_value = 0;
+  digitalWrite(LED_BUILTIN, led_value);
+  led_value = !led_value;
+}
 
 void setup() {
   Serial.begin(115200);
-  pinMode(PIN_MOTOR, OUTPUT);
+  /* pinMode(PIN_MOTOR, OUTPUT); */
+  pinMode(LED_BUILTIN, OUTPUT);
+  screw = afms.getMotor(PIN_MOTOR);
+  afms.begin();
+  screw->setSpeed(0);
+  screw->run(RELEASE);
 }
 
 void loop() {
@@ -44,7 +59,9 @@ void loop() {
       break;
 
     case CMD_MOTOR:
-      analogWrite(PIN_MOTOR, msg.val_f * MAX_SPEED);
+      toggleLED();
+      screw->setSpeed(msg.val_f * MAX_SPEED);
+      screw->run(BACKWARD);
       response.cmd = CMD_MOTOR;
       Serial.write((uint8_t*)&response, sizeof(response));
       break;

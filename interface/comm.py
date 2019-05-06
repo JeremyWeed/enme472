@@ -12,22 +12,41 @@ class Comm():
     CMD_MOTOR     = 1
     REQUEST_SCALE = struct.pack('<Bf', CMD_SCALE, 0)
     MSG_SIZE      = 5
+    TIMEOUT       = 0.5
+    MAX_RETRIES   = 3
 
     def __init__(self, port):
-        self.arduino = serial.Serial(port, baudrate=self.BAUD)
+        self.arduino = serial.Serial(port, baudrate=self.BAUD,
+                                     timeout=self.TIMEOUT)
 
     def motor_cmd(self, val):
         return struct.pack('<Bf', self.CMD_MOTOR, val)
 
+    def send_msg(self, msg):
+
+        self.arduino.write(msg)
+        read = self.arduino.read(self.MSG_SIZE)
+        tries = 1
+
+        while len(read) != self.MSG_SIZE and tries < self.MAX_RETRIES:
+            self.arduino.write(msg)
+            read = self.arduino.read(self.MSG_SIZE)
+            tries += 1
+        if len(read) == self.MSG_SIZE:
+            return read
+        else:
+            raise Exception('Error communicating with the Arduino')
+
     def send_stop(self):
-        self.arduino.write(self.motor_cmd(0.0))
+        self.send_speed(0.0)
 
     def send_speed(self, speed):
-        self.arduino.write(self.motor_cmd(speed))
+        # read the response and ignore it
+        self.send_msg(self.motor_cmd(speed))
 
     def get_scale_raw(self):
-        self.arduino.write(self.REQUEST_SCALE)
-        (_, resp) = struct.unpack('<Bi', self.arduino.read(self.MSG_SIZE))
+        msg = self.send_msg(self.REQUEST_SCALE)
+        (_, resp) = struct.unpack('<Bi', msg)
         return resp
 
 

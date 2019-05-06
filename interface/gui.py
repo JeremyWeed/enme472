@@ -17,6 +17,8 @@ class GUI():
     GREEN = '#66ff99'
     RED = '#ff6666'
     TEXT_COLOR = '#1a2a3a'
+    SCREEN_SIZE = (800, 480)
+    REFRESH_PERIOD = 50  # ms
 
     products = None
     numerals = set([str(x) for x in range(10)])
@@ -77,7 +79,7 @@ class GUI():
                        self.right_side]]
         # sg.Frame('real-time controls',
         # [[sg.RealtimeButton('Dispense')]])
-        self.arduino = Comm('/dev/ttyACM1')
+        self.arduino = Comm('/dev/ttyACM0')
 
     def update_amount(self, value):
         self.amount.Update('{:,.2f}'.format(value))
@@ -86,9 +88,10 @@ class GUI():
         self.price.Update('${:,.2f}'.format(price))
 
     def run(self):
-        window = sg.Window('test').Layout(self.layout).Finalize()
+        window = sg.Window('test', size=self.SCREEN_SIZE
+                           ).Layout(self.layout).Finalize()
         while True:
-            button, value = window.Read(timeout=10)
+            button, value = window.Read(timeout=self.REFRESH_PERIOD)
             if button is None:
                 break
             if button != '__TIMEOUT__':
