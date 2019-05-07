@@ -18,7 +18,8 @@ class GUI():
     GREEN = '#66ff99'
     RED = '#ff6666'
     TEXT_COLOR = '#1a2a3a'
-    SCREEN_SIZE = (800, 480)
+    # SCREEN_SIZE = (800, 480)
+    SCREEN_SIZE = (800, 800)
     REFRESH_PERIOD = 50  # ms
     BACKGROUND_COLOR = '#dddddd'
     BUTTON_COLOR = (TEXT_COLOR, '#6666ff')
@@ -97,7 +98,7 @@ class GUI():
                        self.right_side]]
         # sg.Frame('real-time controls',
         # [[sg.RealtimeButton('Dispense')]])
-        self.arduino = Comm('/dev/ttyACM1')
+        self.arduino = Comm(self.state.port)
 
     def update_amount(self, value):
         self.amount.Update('{:,.2f}'.format(value))
@@ -116,19 +117,28 @@ class GUI():
                 break
             if button != '__TIMEOUT__':
                 if button in self.numerals:
-                    print(self.state.amount_desired)
+                    self.state.amount_desired = self.state.amount_desired * 10\
+                        + 0.01 * int(button)
                     self.state.amount_desired = \
-                        self.state.convert_to_base(
-                            self.state.convert_units(self.state.amount_desired) * 10
-                            + 0.01 * int(button) )
-                if button == 'Clear':
-                    self.amount_val = 0
-                if button == 'Enter':
+                        min(self.state.max_amount_desired,
+                            self.state.amount_desired)
+                elif button == 'Clear':
+                    self.state.amount_desired = 0
+                elif button == 'Tare':
+                    pass
+                elif button == 'Dispense':
+                    pass
+                elif button == 'Stop':
+                    pass
+                elif button in convs.PRICES.keys():
+                    pass
+                elif button == 'Enter':
                     self.dispensed_val += self.amount_val
                     self.amount_val = 0
-                self.amount.Update('{:,.2f}'.format(self.amount_val))
-                # self.dispensed.Update('{:,.2f}'.format(self.dispensed_val))
-                print(self.amount_val)
+                self.amount.Update(self.state.get_desired_amount())
+                self.dispensed.Update(self.state.get_dispensed_amount())
+                self.price.Update(self.state.get_desired_price())
+                self.dispensed_price.Update(self.state.get_dispensed_price())
             self.debug_scale.Update('{:d}'
                                     .format(self.arduino.get_scale_raw()))
 

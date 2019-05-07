@@ -27,10 +27,13 @@ class State():
     '''
     def __init__(self):
 
+        # static settings
+        self.max_amount_desired = 9999
         # Already dispensed:
         self.amount_dispensed = 0.0
 
         # To be dispensed:
+        # in currently selected units
         self.amount_desired = 0.0
 
         # System state
@@ -70,7 +73,7 @@ class State():
         return State.amnt_to_str(self.convert_units(self.amount_dispensed))
 
     def get_desired_amount(self):
-        return State.amnt_to_str(self.convert_units(self.amount_desired))
+        return State.amnt_to_str(self.amount_desired)
 
     def get_price(self, amount):
         return amount \
@@ -80,4 +83,5 @@ class State():
         return State.price_to_str(self.get_price(self.amount_dispensed))
 
     def get_desired_price(self):
-        return State.price_to_str(self.get_price(self.amount_desired))
+        return State.price_to_str(self.get_price(
+            self.convert_to_base(self.amount_desired)))
