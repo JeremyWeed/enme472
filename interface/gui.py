@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 
 import PySimpleGUI as sg
-from conversions import Conversions as convs
+from model import Conversions as convs
+from model import State
 from comm import Comm
 
 
@@ -19,6 +20,8 @@ class GUI():
     TEXT_COLOR = '#1a2a3a'
     SCREEN_SIZE = (800, 480)
     REFRESH_PERIOD = 50  # ms
+    BACKGROUND_COLOR = '#dddddd'
+    BUTTON_COLOR = (TEXT_COLOR, '#6666ff')
 
     products = None
     numerals = set([str(x) for x in range(10)])
@@ -26,20 +29,22 @@ class GUI():
     def __init__(self):
 
         # State variables (these should probably be somewhere else)
+        self.state = State()
         self.amount_val = 0
         self.dispensed_val = 0
+        self.selected_unit = next(iter(convs.MASS.keys()))
 
         # gui elements
         self.amount = sg.Text('0.00', size=(8, 1), justification='right',
                               font=self.FONT)
-        self.dispensed = sg.Text('0.00', size=(7, 1),
-                                 justification='right', font=self.FONT)
         self.price = sg.Text('$0.00', size=(11, 1), justification='right',
                              font=self.FONT)
         self.units = sg.InputCombo(list(convs.MASS.keys()), font=self.FONT,
-                                   default_value=next(iter(convs.MASS.keys())))
+                                   default_value=self.selected_unit,
+                                   size=(3, 1), change_submits=True,
+                                   readonly=True)
         self.output = sg.Frame('Weight/Volume:', [[self.amount, self.units]])
-        self.prices = sg.Frame('Price:', [[self.price]])
+        self.prices = sg.Frame('Estm. Price:', [[self.price]])
         self.input = sg.Frame('Enter Value:',
                               [[sg.Button(str(x), font=self.FONT)
                                 for x in range(1, 4)],
@@ -68,18 +73,31 @@ class GUI():
                                              button_color=(self.TEXT_COLOR,
                                                            self.RED),
                                              font=self.FONT)]])
+        self.tare = sg.Button('tare', font=self.FONT)
         self.debug_scale = sg.Text('VALUE', font=self.FONT)
         self.debug = sg.Frame('DEBUG', [[sg.Text('Scale:', font=self.FONT),
                                          self.debug_scale]])
-        self.left_side = sg.Column([[self.product_selector],
+        self.dispensed_amount = sg.Text('0.00', size=(7, 1),
+                                        justification='right', font=self.FONT)
+        self.dispensed_price = sg.Text('$0.00', font=self.FONT)
+        self.dispensed_unit = sg.Text(self.selected_unit, font=self.FONT)
+        self.dispensed = sg.Frame('', [[sg.Text('Dispensed:', font=self.FONT),
+                                        self.dispensed_amount,
+                                        self.dispensed_unit],
+                                       [sg.Text('Final Price:',
+                                                font=self.FONT),
+                                        self.dispensed_price]])
+        self.left_side = sg.Column([[self.dispensed],
+                                    [self.product_selector],
                                     [self.dispense_by],
+                                    [self.tare],
                                     [self.actuate],
                                     [self.debug]])
         self.layout = [[self.left_side,
                        self.right_side]]
         # sg.Frame('real-time controls',
         # [[sg.RealtimeButton('Dispense')]])
-        self.arduino = Comm('/dev/ttyACM0')
+        self.arduino = Comm('/dev/ttyACM1')
 
     def update_amount(self, value):
         self.amount.Update('{:,.2f}'.format(value))
@@ -88,7 +106,9 @@ class GUI():
         self.price.Update('${:,.2f}'.format(price))
 
     def run(self):
-        window = sg.Window('test', size=self.SCREEN_SIZE
+        window = sg.Window('test', size=self.SCREEN_SIZE,
+                           font=self.FONT,
+                           button_color=self.BUTTON_COLOR
                            ).Layout(self.layout).Finalize()
         while True:
             button, value = window.Read(timeout=self.REFRESH_PERIOD)
@@ -96,8 +116,11 @@ class GUI():
                 break
             if button != '__TIMEOUT__':
                 if button in self.numerals:
-                    self.amount_val = min(self.amount_val*10 + .01*int(button),
-                                          self.MAX_VALUE)
+                    print(self.state.amount_desired)
+                    self.state.amount_desired = \
+                        self.state.convert_to_base(
+                            self.state.convert_units(self.state.amount_desired) * 10
+                            + 0.01 * int(button) )
                 if button == 'Clear':
                     self.amount_val = 0
                 if button == 'Enter':
