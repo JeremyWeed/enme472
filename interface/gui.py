@@ -167,6 +167,15 @@ class GUI():
             self.dispensed_amount.Update(self.state.get_dispensed_amount())
             self.dispensed_price.Update(self.state.get_dispensed_price())
 
+            if self.state.amount_requested > 0:
+                error = self.state.amount_requested \
+                    - self.state.amount_dispensed
+                if abs(error) < self.state.control_accuracy:
+                    self.state.amount_requested = 0
+                else:
+                    self.arduino.send_speed(self.
+                                            state.
+                                            get_motor_feedback_command(error))
         window.Close()
 
 
