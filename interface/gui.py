@@ -18,8 +18,8 @@ class GUI():
     GREEN = '#66ff99'
     RED = '#ff6666'
     TEXT_COLOR = '#1a2a3a'
-    # SCREEN_SIZE = (800, 480)
-    SCREEN_SIZE = (800, 800)
+    SCREEN_SIZE = (800, 480)
+    # SCREEN_SIZE = (800, 800)
     REFRESH_PERIOD = 50  # ms
     BACKGROUND_COLOR = '#dddddd'
     BUTTON_COLOR = (TEXT_COLOR, '#6666ff')
@@ -41,8 +41,8 @@ class GUI():
         self.price = sg.Text('$0.00', size=(11, 1), justification='right',
                              font=self.FONT)
         self.units = sg.InputCombo(list(convs.MASS.keys()), font=self.FONT,
-                                   default_value=self.selected_unit,
-                                   size=(3, 1), change_submits=True,
+                                   default_value=self.state.selected_unit,
+                                   size=(6, 1), change_submits=True,
                                    readonly=True)
         self.output = sg.Frame('Weight/Volume:', [[self.amount, self.units]])
         self.prices = sg.Frame('Estm. Price:', [[self.price]])
@@ -73,8 +73,8 @@ class GUI():
                                    sg.Button('Stop',
                                              button_color=(self.TEXT_COLOR,
                                                            self.RED),
-                                             font=self.FONT)]])
-        self.tare = sg.Button('tare', font=self.FONT)
+                                             font=self.FONT),
+                                   sg.Button('Tare', font=self.FONT)]])
         self.debug_scale = sg.Text('VALUE', font=self.FONT)
         self.debug = sg.Frame('DEBUG', [[sg.Text('Scale:', font=self.FONT),
                                          self.debug_scale]])
@@ -89,10 +89,9 @@ class GUI():
                                                 font=self.FONT),
                                         self.dispensed_price]])
         self.left_side = sg.Column([[self.dispensed],
-                                    [self.product_selector],
-                                    [self.dispense_by],
-                                    [self.tare],
                                     [self.actuate],
+                                    [self.dispense_by],
+                                    [self.product_selector],
                                     [self.debug]])
         self.layout = [[self.left_side,
                        self.right_side]]
@@ -109,38 +108,64 @@ class GUI():
     def run(self):
         window = sg.Window('test', size=self.SCREEN_SIZE,
                            font=self.FONT,
-                           button_color=self.BUTTON_COLOR
+                           button_color=self.BUTTON_COLOR,
+                           background_color=self.BACKGROUND_COLOR,
                            ).Layout(self.layout).Finalize()
         while True:
-            button, value = window.Read(timeout=self.REFRESH_PERIOD)
+
+            button, values = window.Read(timeout=self.REFRESH_PERIOD)
             if button is None:
                 break
-            if button != '__TIMEOUT__':
-                if button in self.numerals:
-                    self.state.amount_desired = self.state.amount_desired * 10\
-                        + 0.01 * int(button)
-                    self.state.amount_desired = \
-                        min(self.state.max_amount_desired,
-                            self.state.amount_desired)
-                elif button == 'Clear':
-                    self.state.amount_desired = 0
-                elif button == 'Tare':
-                    pass
-                elif button == 'Dispense':
-                    pass
-                elif button == 'Stop':
-                    pass
-                elif button in convs.PRICES.keys():
-                    pass
-                elif button == 'Enter':
-                    self.dispensed_val += self.amount_val
-                    self.amount_val = 0
-                self.amount.Update(self.state.get_desired_amount())
-                self.dispensed.Update(self.state.get_dispensed_amount())
-                self.price.Update(self.state.get_desired_price())
-                self.dispensed_price.Update(self.state.get_dispensed_price())
+
+            self.state.amount_dispensed = self.arduino.get_weight() \
+                - self.state.container_mass
             self.debug_scale.Update('{:d}'
                                     .format(self.arduino.get_scale_raw()))
+            if button != '__TIMEOUT__':
+                if button == 0:
+                    self.state.selected_unit = values[0]
+
+                if button in self.numerals:
+                    print(self.state.convert_units(self.state.amount_desired))
+                    self.state.amount_desired = \
+                        self.state.convert_to_base(
+                            min(self.state.max_amount_desired,
+                                self.state.convert_units(
+                                    self.state.amount_desired)
+                                * 10
+                                + 0.01 * int(button)))
+
+                elif button == 'Clear':
+                    self.state.amount_desired = 0
+
+                elif button == 'Tare':
+                    self.state.container_mass = self.arduino.get_weight()
+
+                elif button == 'Dispense':
+                    self.state.amount_requested = self.state.amount_desired \
+                        + self.state.amount_dispensed \
+                        + self.state.container_mass
+                    self.state.amount_desired = 0
+
+                elif button == 'Stop':
+                    self.state.amount_requested = 0
+
+                elif button in convs.PRICES.keys():
+                    self.state.selected_product = button
+
+                elif button == 'Weight':
+                    self.state.selected_unit = self.state.weight_unit
+                    self.units.Update(values=list(convs.MASS.keys()))
+
+                elif button == 'Volume':
+                    self.state.selected_unit = self.state.volume_unit
+                    self.units.Update(values=list(convs.VOLUMES.keys()))
+
+                self.amount.Update(self.state.get_desired_amount())
+                self.price.Update(self.state.get_desired_price())
+                self.dispensed_unit.Update(self.state.selected_unit)
+            self.dispensed_amount.Update(self.state.get_dispensed_amount())
+            self.dispensed_price.Update(self.state.get_dispensed_price())
 
         window.Close()
 

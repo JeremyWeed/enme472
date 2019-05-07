@@ -29,11 +29,11 @@ class State():
 
         # static settings
         self.max_amount_desired = 9999
+
         # Already dispensed:
         self.amount_dispensed = 0.0
 
         # To be dispensed:
-        # in currently selected units
         self.amount_desired = 0.0
 
         # System state
@@ -43,9 +43,11 @@ class State():
         # General settings
         self.selected_unit = next(iter(Conversions.MASS.keys()))
         self.selected_product = next(iter(Conversions.DENSITIES.keys()))
+        self.weight_unit = next(iter(Conversions.MASS.keys()))
+        self.volume_unit = next(iter(Conversions.VOLUMES.keys()))
 
         # Hardware things
-        self.port = '/dev/ttyACM0'
+        self.port = '/dev/ttyACM1'
 
     def price_to_str(price):
         return '${:,.2f}'.format(price)
@@ -57,23 +59,23 @@ class State():
         '''Get the value converted to the currently desired units'''
         if self.selected_unit in Conversions.VOLUMES:
             return amount \
-                * Conversions.VOLUMES[self.selected_unit] \
-                / Conversions.DENSITIES[self.selected_product]
-        else:
-            return amount * Conversions.MASS[self.selected_unit]
-
-    def convert_to_base(self, amount):
-        if self.selected_unit in Conversions.VOLUMES:
-            return amount / Conversions.VOLUMES[self.selected_unit] \
+                / Conversions.VOLUMES[self.selected_unit] \
                 * Conversions.DENSITIES[self.selected_product]
         else:
             return amount / Conversions.MASS[self.selected_unit]
+
+    def convert_to_base(self, amount):
+        if self.selected_unit in Conversions.VOLUMES:
+            return amount * Conversions.VOLUMES[self.selected_unit] \
+                / Conversions.DENSITIES[self.selected_product]
+        else:
+            return amount * Conversions.MASS[self.selected_unit]
 
     def get_dispensed_amount(self):
         return State.amnt_to_str(self.convert_units(self.amount_dispensed))
 
     def get_desired_amount(self):
-        return State.amnt_to_str(self.amount_desired)
+        return State.amnt_to_str(self.convert_units(self.amount_desired))
 
     def get_price(self, amount):
         return amount \
@@ -83,5 +85,4 @@ class State():
         return State.price_to_str(self.get_price(self.amount_dispensed))
 
     def get_desired_price(self):
-        return State.price_to_str(self.get_price(
-            self.convert_to_base(self.amount_desired)))
+        return State.price_to_str(self.get_price(self.amount_desired))

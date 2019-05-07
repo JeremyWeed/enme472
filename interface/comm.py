@@ -3,6 +3,7 @@ import struct
 import cmd
 import time
 import sys
+from collections import deque
 
 
 class Comm():
@@ -14,10 +15,15 @@ class Comm():
     MSG_SIZE      = 5
     TIMEOUT       = 0.5
     MAX_RETRIES   = 3
+    M             = -4.90471
+    B             = 3426.251
+    FILTER_LEN    = 20
+    ROUND_TO      = 5
 
     def __init__(self, port):
         self.arduino = serial.Serial(port, baudrate=self.BAUD,
                                      timeout=self.TIMEOUT)
+        self.filter = deque(maxlen=Comm.FILTER_LEN)
 
     def motor_cmd(self, val):
         return struct.pack('<Bf', self.CMD_MOTOR, val)
@@ -48,6 +54,12 @@ class Comm():
         msg = self.send_msg(self.REQUEST_SCALE)
         (_, resp) = struct.unpack('<Bi', msg)
         return resp
+
+    def get_weight(self):
+        self.filter.append(self.get_scale_raw())
+        return Comm.ROUND_TO * round((Comm.M * sum(self.filter)
+                                      / Comm.FILTER_LEN + Comm.B)
+                                     / Comm.ROUND_TO)
 
 
 class CommTest(cmd.Cmd):
