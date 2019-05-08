@@ -18,8 +18,9 @@ class GUI():
     GREEN = '#66ff99'
     RED = '#ff6666'
     TEXT_COLOR = '#1a2a3a'
-    SCREEN_SIZE = (800, 480)
+    # SCREEN_SIZE = (800, 480)
     # SCREEN_SIZE = (800, 800)
+    SCREEN_SIZE = (640, 480)
     REFRESH_PERIOD = 50  # ms
     BACKGROUND_COLOR = '#dddddd'
     BUTTON_COLOR = (TEXT_COLOR, '#6666ff')
@@ -150,6 +151,7 @@ class GUI():
 
                 elif button == 'Stop':
                     self.state.amount_requested = 0
+                    self.arduino.send_stop()
 
                 elif button in convs.PRICES.keys():
                     self.state.selected_product = button
@@ -170,13 +172,13 @@ class GUI():
 
             if self.state.amount_requested > 0:
                 error = self.state.amount_requested \
-                    - self.state.amount_dispensed
-                if abs(error) < self.state.control_accuracy:
+                    - self.state.amount_dispensed - self.state.container_mass
+                if abs(error) < self.state.control_accuracy or error < 0:
                     self.state.amount_requested = 0
                 else:
-                    self.arduino.send_speed(self.
-                                            state.
-                                            get_motor_feedback_command(error))
+                    motor_cmd = self.state.get_motor_feedback_command(error)
+                    print(motor_cmd)
+                    self.arduino.send_speed(motor_cmd)
         window.Close()
 
 
