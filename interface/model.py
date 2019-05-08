@@ -48,10 +48,11 @@ class State():
 
         # Hardware things
         self.port = '/dev/ttyACM1'
-        self.kp = 1
+        self.kp = 0.1
         self.kd = 0
         self.prev_error = 0
         self.control_accuracy = 10  # in base units, g
+        self.max_motor_cmd = 1.9
 
     def price_to_str(price):
         return '${:,.2f}'.format(price)
@@ -94,4 +95,4 @@ class State():
     def get_motor_feedback_command(self, error):
         motor_cmd = self.kp*error + self.kd*(error - self.prev_error)
         self.prev_error = error
-        return motor_cmd
+        return min(motor_cmd, self.max_motor_cmd)
