@@ -21,6 +21,8 @@ class GUI():
     # SCREEN_SIZE = (800, 480)
     # SCREEN_SIZE = (800, 800)
     SCREEN_SIZE = (640, 480)
+    LEFT_SIZE = (200, 480)
+    RIGHT_SIZE = (SCREEN_SIZE[0] - LEFT_SIZE[0], SCREEN_SIZE[1] - LEFT_SIZE[1])
     REFRESH_PERIOD = 50  # ms
     BACKGROUND_COLOR = '#dddddd'
     BUTTON_COLOR = (TEXT_COLOR, '#6666ff')
@@ -67,10 +69,11 @@ class GUI():
         self.dispense_by = sg.Frame('Dispense by:',
                                     [[sg.Button('Weight', font=self.FONT),
                                       sg.Button('Volume', font=self.FONT)]])
-        self.actuate = sg.Column([[sg.RealtimeButton('Dispense',
-                                             button_color=(self.TEXT_COLOR,
-                                                           self.GREEN),
-                                             font=self.FONT),
+        self.actuate = sg.Column([[sg.RealtimeButton(
+            'Dispense',
+            button_color=(self.TEXT_COLOR,
+                          self.GREEN),
+            font=self.FONT),
                                    sg.Button('Stop',
                                              button_color=(self.TEXT_COLOR,
                                                            self.RED),
