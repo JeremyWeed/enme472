@@ -8,8 +8,11 @@
 #include <Adafruit_MotorShield.h>
 
 #define PIN_SCALE A0
-#define PIN_MOTOR 1
+#define PIN_MOTOR 3
+#define SHIELD_MOTOR 1
 #define MAX_SPEED 128
+
+#define USE_H_BRIDGE
 
 #define CMD_READ_SCALE 0
 #define CMD_MOTOR 1
@@ -23,8 +26,10 @@ struct __attribute__ ((packed)) Msg {
 } msg;
 Msg response;
 
+#ifndef USE_H_BRIDGE
 Adafruit_MotorShield afms = Adafruit_MotorShield();
 Adafruit_DCMotor *screw;
+#endif
 
 void toggleLED() {
   static uint8_t led_value = 0;
@@ -36,10 +41,14 @@ void setup() {
   Serial.begin(115200);
   /* pinMode(PIN_MOTOR, OUTPUT); */
   pinMode(LED_BUILTIN, OUTPUT);
-  screw = afms.getMotor(PIN_MOTOR);
+#ifndef USE_H_BRIDGE
+  screw = afms.getMotor(SHIELD_MOTOR);
   afms.begin();
   screw->setSpeed(0);
   screw->run(RELEASE);
+#else
+  pinMode(PIN_MOTOR, OUTPUT);
+#endif
 }
 
 void loop() {
@@ -60,8 +69,13 @@ void loop() {
 
     case CMD_MOTOR:
       toggleLED();
+
+#ifdef USE_H_BRIDGE
+      analogWrite(PIN_MOTOR, msg.val_f * MAX_SPEED);
+#else
       screw->setSpeed(msg.val_f * MAX_SPEED);
       screw->run(BACKWARD);
+#endif
       response.cmd = CMD_MOTOR;
       Serial.write((uint8_t*)&response, sizeof(response));
       break;
