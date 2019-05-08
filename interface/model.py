@@ -47,7 +47,7 @@ class State():
         self.volume_unit = next(iter(Conversions.VOLUMES.keys()))
 
         # Hardware things
-        self.port = '/dev/ttyACM1'
+        self.port = '/dev/ttyACM0'
         self.kp = 0.1
         self.kd = 0
         self.prev_error = 0
