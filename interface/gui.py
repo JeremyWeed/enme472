@@ -4,6 +4,7 @@ import PySimpleGUI as sg
 from model import Conversions as convs
 from model import State
 from comm import Comm
+import time
 
 
 # helpful color sites:
@@ -47,8 +48,10 @@ class GUI():
                                    default_value=self.state.selected_unit,
                                    size=(6, 1), change_submits=True,
                                    readonly=True)
-        self.output = sg.Frame('Weight/Volume:', [[self.amount, self.units]])
-        self.prices = sg.Frame('Estm. Price:', [[self.price]])
+        self.output = sg.Frame('Weight/Volume:', [[self.amount, self.units]],
+                               background_color=self.BACKGROUND_COLOR)
+        self.prices = sg.Frame('Estm. Price:', [[self.price]],
+                               background_color=self.BACKGROUND_COLOR)
         self.input = sg.Frame('Enter Value:',
                               [[sg.Button(str(x), font=self.FONT)
                                 for x in range(1, 4)],
@@ -58,17 +61,21 @@ class GUI():
                                 for x in range(7, 10)],
                                [sg.Button('Clear', font=self.FONT),
                                 sg.Button('0', size=(1, 1),
-                                          font=self.FONT)]])
+                                          font=self.FONT)]],
+                              background_color=self.BACKGROUND_COLOR)
         self.right_side = sg.Column([[self.output],
                                      [self.prices],
-                                     [self.input]])
+                                     [self.input]],
+                                    background_color=self.BACKGROUND_COLOR)
         self.product_buttons = [sg.Button(x, font=self.FONT)
                                 for x in convs.DENSITIES.keys()]
         self.product_selector = sg.Frame('Select Product:',
-                                         [self.product_buttons])
+                                         [self.product_buttons],
+                                         background_color=self.BACKGROUND_COLOR)
         self.dispense_by = sg.Frame('Dispense by:',
                                     [[sg.Button('Weight', font=self.FONT),
-                                      sg.Button('Volume', font=self.FONT)]])
+                                      sg.Button('Volume', font=self.FONT)]],
+                                    background_color=self.BACKGROUND_COLOR)
         self.actuate = sg.Column([[sg.RealtimeButton(
             'Dispense',
             button_color=(self.TEXT_COLOR,
@@ -78,10 +85,12 @@ class GUI():
                                              button_color=(self.TEXT_COLOR,
                                                            self.RED),
                                              font=self.FONT),
-                                   sg.Button('Tare', font=self.FONT)]])
+                                   sg.Button('Tare', font=self.FONT)]],
+                                 background_color=self.BACKGROUND_COLOR)
         self.debug_scale = sg.Text('VALUE', font=self.FONT)
         self.debug = sg.Frame('DEBUG', [[sg.Text('Scale:', font=self.FONT),
-                                         self.debug_scale]])
+                                         self.debug_scale]],
+                              background_color=self.BACKGROUND_COLOR)
         self.dispensed_amount = sg.Text('0.00', size=(7, 1),
                                         justification='right', font=self.FONT)
         self.dispensed_price = sg.Text('$0.00', font=self.FONT)
@@ -91,12 +100,14 @@ class GUI():
                                         self.dispensed_unit],
                                        [sg.Text('Final Price:',
                                                 font=self.FONT),
-                                        self.dispensed_price]])
+                                        self.dispensed_price]],
+                                  background_color=self.BACKGROUND_COLOR)
         self.left_side = sg.Column([[self.dispensed],
                                     [self.actuate],
                                     [self.dispense_by],
                                     [self.product_selector],
-                                    [self.debug]])
+                                    [self.debug]],
+                                   background_color=self.BACKGROUND_COLOR)
         self.layout = [[self.left_side,
                        self.right_side]]
         # sg.Frame('real-time controls',
@@ -117,7 +128,8 @@ class GUI():
                            ).Layout(self.layout).Finalize()
         while True:
 
-            button, values = window.Read(timeout=self.REFRESH_PERIOD)
+            time.sleep(self.REFRESH_PERIOD/1000)
+            button, values = window.Read(timeout=0)
             if button is None:
                 break
 
@@ -126,8 +138,6 @@ class GUI():
             self.debug_scale.Update('{:d}'
                                     .format(self.arduino.get_scale_raw()))
             if button != '__TIMEOUT__':
-                print(button)
-                print(values)
                 if button == 0:
                     self.state.selected_unit = values[0]
 
