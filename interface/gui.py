@@ -66,7 +66,7 @@ class GUI():
         self.dispense_by = sg.Frame('Dispense by:',
                                     [[sg.Button('Weight', font=self.FONT),
                                       sg.Button('Volume', font=self.FONT)]])
-        self.actuate = sg.Column([[sg.Button('Dispense',
+        self.actuate = sg.Column([[sg.RealtimeButton('Dispense',
                                              button_color=(self.TEXT_COLOR,
                                                            self.GREEN),
                                              font=self.FONT),
@@ -122,11 +122,12 @@ class GUI():
             self.debug_scale.Update('{:d}'
                                     .format(self.arduino.get_scale_raw()))
             if button != '__TIMEOUT__':
+                print(button)
+                print(values)
                 if button == 0:
                     self.state.selected_unit = values[0]
 
                 if button in self.numerals:
-                    print(self.state.convert_units(self.state.amount_desired))
                     self.state.amount_desired = \
                         self.state.convert_to_base(
                             min(self.state.max_amount_desired,

@@ -11,10 +11,10 @@ class Conversions():
     VOLUMES = {'ml': 1.0, 'cups': 240, 'pint': 472.176, 'quart': 946.353,
                'fl-oz': 29.5735, 'tbls': 14.7868}
     # testing densities, in g/ml
-    DENSITIES = {'rice': 2.0, 'flour': 3.0, 'candy': 25.0}
+    DENSITIES = {'rice': 2.0, 'flour': 3.0, 'candy': 25.0, 'water': 1.0}
 
     # testing prices, in dollars/g
-    PRICES = {'rice': 0.01, 'flour': 0.05, 'candy': 0.25}
+    PRICES = {'rice': 0.01, 'flour': 0.05, 'candy': 0.25, 'water': .001}
 
     def __init__(self):
         # nothing to actually do here
@@ -47,7 +47,7 @@ class State():
         self.volume_unit = next(iter(Conversions.VOLUMES.keys()))
 
         # Hardware things
-        self.port = '/dev/ttyACM1'
+        self.port = '/dev/ttyACM0'
         self.kp = 1
         self.kd = 0
         self.prev_error = 0
