@@ -170,7 +170,7 @@ class GUI():
 
             if self.state.amount_requested > 0:
                 error = self.state.amount_requested \
-                    - self.state.amount_dispensed
+                    - self.state.amount_dispensed - self.state.container_mass
                 if abs(error) < self.state.control_accuracy:
                     self.state.amount_requested = 0
                 else:
