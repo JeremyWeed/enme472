@@ -171,7 +171,7 @@ class GUI():
             if self.state.amount_requested > 0:
                 error = self.state.amount_requested \
                     - self.state.amount_dispensed - self.state.container_mass
-                if abs(error) < self.state.control_accuracy:
+                if abs(error) < self.state.control_accuracy or error < 0:
                     self.state.amount_requested = 0
                 else:
                     motor_cmd = self.state.get_motor_feedback_command(error)
