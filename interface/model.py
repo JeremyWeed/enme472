@@ -48,7 +48,7 @@ class State():
 
         # Hardware things
         self.port = '/dev/ttyACM0'
-        self.kp = 0.1
+        self.kp = 0.001
         self.kd = 0
         self.prev_error = 0
         self.control_accuracy = 10  # in base units, g

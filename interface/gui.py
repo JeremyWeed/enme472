@@ -18,8 +18,9 @@ class GUI():
     GREEN = '#66ff99'
     RED = '#ff6666'
     TEXT_COLOR = '#1a2a3a'
-    SCREEN_SIZE = (800, 480)
+    # SCREEN_SIZE = (800, 480)
     # SCREEN_SIZE = (800, 800)
+    SCREEN_SIZE = (640, 480)
     REFRESH_PERIOD = 50  # ms
     BACKGROUND_COLOR = '#dddddd'
     BUTTON_COLOR = (TEXT_COLOR, '#6666ff')
