@@ -149,6 +149,7 @@ class GUI():
 
                 elif button == 'Stop':
                     self.state.amount_requested = 0
+                    self.arduino.send_stop()
 
                 elif button in convs.PRICES.keys():
                     self.state.selected_product = button
@@ -173,9 +174,9 @@ class GUI():
                 if abs(error) < self.state.control_accuracy:
                     self.state.amount_requested = 0
                 else:
-                    self.arduino.send_speed(self.
-                                            state.
-                                            get_motor_feedback_command(error))
+                    motor_cmd = self.state.get_motor_feedback_command(error)
+                    print(motor_cmd)
+                    self.arduino.send_speed(motor_cmd)
         window.Close()
 
 
