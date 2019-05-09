@@ -24,7 +24,6 @@ class GUI():
     SCREEN_SIZE = (640, 480)
     LEFT_SIZE = (200, 480)
     RIGHT_SIZE = (SCREEN_SIZE[0] - LEFT_SIZE[0], SCREEN_SIZE[1] - LEFT_SIZE[1])
-    REFRESH_PERIOD = 50  # ms
     BACKGROUND_COLOR = '#dddddd'
     BUTTON_COLOR = (TEXT_COLOR, '#6666ff')
 
@@ -76,7 +75,7 @@ class GUI():
                                     [[sg.Button('Weight', font=self.FONT),
                                       sg.Button('Volume', font=self.FONT)]],
                                     background_color=self.BACKGROUND_COLOR)
-        self.actuate = sg.Column([[sg.RealtimeButton(
+        self.actuate = sg.Column([[sg.Button(
             'Dispense',
             button_color=(self.TEXT_COLOR,
                           self.GREEN),
@@ -128,7 +127,7 @@ class GUI():
                            ).Layout(self.layout).Finalize()
         while True:
 
-            time.sleep(self.REFRESH_PERIOD/1000)
+            time.sleep(self.state.refresh_period/1000)
             button, values = window.Read(timeout=0)
             if button is None:
                 break
@@ -186,11 +185,15 @@ class GUI():
             if self.state.amount_requested > 0:
                 error = self.state.amount_requested \
                     - self.state.amount_dispensed - self.state.container_mass
-                if abs(error) < self.state.control_accuracy or error < 0:
+                print('error: {}'.format(error))
+                print('requested: {}'.format(self.state.amount_requested))
+                print('cont mass: {}'.format(self.state.container_mass))
+                if error < self.state.control_accuracy or error < 0:
                     self.state.amount_requested = 0
+                    self.arduino.send_stop()
                 else:
                     motor_cmd = self.state.get_motor_feedback_command(error)
-                    print(motor_cmd)
+                    print('motor: {}'.format(motor_cmd))
                     self.arduino.send_speed(motor_cmd)
         window.Close()
 
