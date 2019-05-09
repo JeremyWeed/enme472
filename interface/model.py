@@ -49,13 +49,13 @@ class State():
         self.weight_unit = next(iter(Conversions.MASS.keys()))
         self.volume_unit = next(iter(Conversions.VOLUMES.keys()))
         self.csv_filename = 'pid_data.csv'
-        self.data_writer = SaveData(self.state.csv_filename)
+        self.data_writer = SaveData(self.csv_filename)
 
         # Hardware things
         self.port = '/dev/ttyACM0'
-        self.kp = 0.01
-        self.ki = 0.00001
-        self.kd = 0.3
+        self.kp = 0.0095
+        self.ki = 0.002
+        self.kd = 0.0
         self.error_integral = 0
         self.prev_error = 0
         self.control_accuracy = 10  # in base units, g
@@ -101,10 +101,10 @@ class State():
         return State.price_to_str(self.get_price(self.amount_desired))
 
     def get_motor_feedback_command(self, error):
-        self.error_integral += error * self.refresh_period
-        error_deriv = (error - self.prev_error)/(self.refresh_period * 1000)
+        self.error_integral += error*(self.refresh_period / 1000)
+        error_deriv = (error - self.prev_error)/(self.refresh_period / 1000)
         motor_cmd = self.kp*error \
-            + self.kd*self.error_deriv \
+            + self.kd*error_deriv \
             + self.ki*(self.error_integral)
         self.prev_error = error
         final_cmd = min(motor_cmd, self.max_motor_cmd)

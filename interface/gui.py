@@ -161,6 +161,8 @@ class GUI():
                         + self.state.amount_dispensed \
                         + self.state.container_mass
                     self.state.amount_desired = 0
+                    self.state.error_integral = 0
+                    self.trial_time = time.time()
 
                 elif button == 'Stop':
                     self.state.amount_requested = 0
@@ -192,6 +194,7 @@ class GUI():
                 if error < self.state.control_accuracy or error < 0:
                     self.state.amount_requested = 0
                     self.arduino.send_stop()
+                    print('Trial time: {}'.format(time.time() - self.trial_time))
                 else:
                     motor_cmd = self.state.get_motor_feedback_command(error)
                     print('motor: {}'.format(motor_cmd))
