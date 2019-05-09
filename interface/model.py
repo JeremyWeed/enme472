@@ -1,3 +1,6 @@
+from csvwriter import SaveData
+
+
 class Conversions():
     '''
     We're going to use grams as the base unit for everything here.
@@ -45,6 +48,8 @@ class State():
         self.selected_product = next(iter(Conversions.DENSITIES.keys()))
         self.weight_unit = next(iter(Conversions.MASS.keys()))
         self.volume_unit = next(iter(Conversions.VOLUMES.keys()))
+        self.csv_filename = 'pid_data.csv'
+        self.data_writer = SaveData(self.state.csv_filename)
 
         # Hardware things
         self.port = '/dev/ttyACM0'
@@ -97,8 +102,16 @@ class State():
 
     def get_motor_feedback_command(self, error):
         self.error_integral += error * self.refresh_period
+        error_deriv = (error - self.prev_error)/(self.refresh_period * 1000)
         motor_cmd = self.kp*error \
-            + self.kd*(error - self.prev_error)/(self.refresh_period * 1000) \
+            + self.kd*self.error_deriv \
             + self.ki*(self.error_integral)
         self.prev_error = error
-        return min(motor_cmd, self.max_motor_cmd)
+        final_cmd = min(motor_cmd, self.max_motor_cmd)
+        self.data_writer.write_data([motor_cmd, final_cmd, error,
+                                     self.error_integral,
+                                     error_deriv,
+                                     self.amount_requested,
+                                     self.amount_dispensed
+                                     - self.container_mass])
+        return final_cmd
