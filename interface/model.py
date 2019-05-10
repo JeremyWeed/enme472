@@ -14,10 +14,10 @@ class Conversions():
     VOLUMES = {'ml': 1.0, 'cups': 240, 'pint': 472.176, 'quart': 946.353,
                'fl-oz': 29.5735, 'tbls': 14.7868}
     # testing densities, in g/ml
-    DENSITIES = {'rice': 2.0, 'candy': 25.0, 'water': 1.0}
+    DENSITIES = {'rice': 2.0, 'pasta': 0.35, 'water': 1.0}
 
     # testing prices, in dollars/g
-    PRICES = {'rice': 0.01, 'candy': 0.25, 'water': .001}
+    PRICES = {'rice': 0.01, 'pasta': 0.025, 'water': .001}
 
     def __init__(self):
         # nothing to actually do here
@@ -72,7 +72,7 @@ class State():
         '''Get the value converted to the currently desired units'''
         if self.selected_unit in Conversions.VOLUMES:
             return amount \
-                / Conversions.VOLUMES[self.selected_unit] \
+                * Conversions.VOLUMES[self.selected_unit] \
                 * Conversions.DENSITIES[self.selected_product]
         else:
             return amount / Conversions.MASS[self.selected_unit]

@@ -20,9 +20,9 @@ class GUI():
     GREEN = '#66ff99'
     RED = '#ff6666'
     TEXT_COLOR = '#1a2a3a'
-    # SCREEN_SIZE = (800, 480)
+    SCREEN_SIZE = (800, 480)
     # SCREEN_SIZE = (800, 800)
-    SCREEN_SIZE = (640, 480)
+    # SCREEN_SIZE = (640, 480)
     LEFT_SIZE = (200, 480)
     RIGHT_SIZE = (SCREEN_SIZE[0] - LEFT_SIZE[0], SCREEN_SIZE[1] - LEFT_SIZE[1])
     BACKGROUND_COLOR = '#dddddd'
